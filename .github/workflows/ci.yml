@@ -1,23 +1,29 @@
-name: ci
+name: Build and Test
 
 on:
+  push:
+    branches: [ main, develop ]
   pull_request:
-    branches: [master]
+    branches: [ main ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java 21
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: '21'
-          cache: maven
+          distribution: 'temurin'
 
-      - name: Run Maven tests
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
+      - name: Run tests
         run: ./mvnw -B clean test
+
+      - name: Generate coverage report
+        run: ./mvnw -B jacoco:report

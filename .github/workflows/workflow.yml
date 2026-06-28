@@ -1,5 +1,4 @@
 name: workflow.yml
-
 on:
   pull_request:
     branches: [main]
@@ -20,4 +19,4 @@ jobs:
           cache: maven
 
       - name: Run Maven tests
-        run: ./mvnw -B clean test
+        run: bash ./mvnw -B clean test

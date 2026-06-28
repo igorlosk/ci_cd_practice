@@ -15,7 +15,7 @@ class CalcTest {
         Calc yourClass = new Calc();
         int a = 5;
         int b = 3;
-        String expectedOutput = "Summa= 7" + System.lineSeparator();
+        String expectedOutput = "Summa= 8" + System.lineSeparator();
 
         // Перехватываем вывод в консоль
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();

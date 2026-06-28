@@ -45,7 +45,7 @@ class PhoneControllerTest {
         when(dbPhoneService.getById(id)).thenReturn(phone);
         when(phoneToDtoMapper.toDto(phone)).thenReturn(dto);
 
-        mockMvc.perform(get("/api/phone/{id}", id))
+        mockMvc.perform(get("/phones/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))

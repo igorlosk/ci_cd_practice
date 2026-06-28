@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: ci_cd
+    environment:
+      POSTGRES_DB: ci_cd
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ci_cd"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ci_cd_pg_data:/var/lib/postgresql/data
+
+volumes:
+  ci_cd_pg_data:

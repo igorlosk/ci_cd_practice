@@ -1,7 +1,6 @@
 package com.loskutnikov.ci_cd.api;
 
 
-import com.loskutnikov.ci_cd.db.PhoneRepository;
 import com.loskutnikov.ci_cd.domain.DbPhoneService;
 import com.loskutnikov.ci_cd.domain.Phone;
 import com.loskutnikov.ci_cd.domain.PhoneToDtoMapper;
@@ -33,9 +32,6 @@ class PhoneControllerTest {
 
     @MockitoBean
     private PhoneToDtoMapper phoneToDtoMapper;
-
-    @MockitoBean
-    private PhoneRepository phoneRepository;
 
     @BeforeEach
     void setUp() {

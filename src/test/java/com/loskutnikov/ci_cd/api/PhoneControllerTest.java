@@ -1,11 +1,13 @@
 package com.loskutnikov.ci_cd.api;
 
 
+import com.loskutnikov.ci_cd.db.PhoneRepository;
 import com.loskutnikov.ci_cd.domain.DbPhoneService;
 import com.loskutnikov.ci_cd.domain.Phone;
 import com.loskutnikov.ci_cd.domain.PhoneToDtoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PhoneController.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PhoneControllerTest {
 
     @Autowired
@@ -30,6 +33,9 @@ class PhoneControllerTest {
 
     @MockitoBean
     private PhoneToDtoMapper phoneToDtoMapper;
+
+    @MockitoBean
+    private PhoneRepository phoneRepository;
 
     @BeforeEach
     void setUp() {

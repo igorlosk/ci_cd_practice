@@ -49,7 +49,7 @@ class PhoneControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.brandName").value("Apple"))
-                .andExpect(jsonPath("$.model").value("171"))
+                .andExpect(jsonPath("$.model").value("17"))
                 .andExpect(jsonPath("$.price").value(100));
 
         // verify

@@ -1,9 +1,4 @@
 services:
-
-  api:
-    ports:
-      - "8080:8080"
-
   postgres:
     image: postgres:16
     container_name: ci_cd
@@ -11,16 +6,42 @@ services:
       POSTGRES_DB: ci_cd
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ci_cd"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d ci_cd" ]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
       - ci_cd_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: java-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ci_cd
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
 
 volumes:
   ci_cd_pg_data:

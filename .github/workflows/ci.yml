@@ -20,25 +20,11 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
-        run: |
-          # Подключаемся к VPS по логину и паролю.
-          # Если умеешь пользоваться SSH-ключами,
-          # позже можешь перевести этот шаг на них.
-          sshpass -p "$VPS_PASSWORD" ssh \
-            -o StrictHostKeyChecking=no \
-            "$VPS_USER@$VPS_HOST" '
-              # Переходим в директорию сервиса.
+        run:
               cd /opt/my-service &&
-              # Подтягиваем свежий image,
-              # указанный в compose-конфиге.
               docker compose pull &&
-              # Перезапускаем сервис с новым образом.
               docker compose up -d
             '
 
       - name: Verify HTTP endpoint
-        run: |
-          # Поставь здесь реальный endpoint своего проекта,
-          # который стабильно должен отвечать 200 OK.
-          curl --fail --retry 10 --retry-delay 3 \
-            http://your-domain-or-ip/
+        run: http://135.106.162.132/

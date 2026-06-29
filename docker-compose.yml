@@ -6,7 +6,6 @@ services:
       POSTGRES_DB: ci_cd
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-
     ports:
       - "5432:5432"
     healthcheck:
@@ -16,6 +15,31 @@ services:
       retries: 5
     volumes:
       - ci_cd_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    image: ci_cd:latest  # 🔥 ЗАМЕНИТЕ на ваш образ
+    container_name: ci_cd
+    ports:
+      - "8080:8080"
+    environment:
+      # Настройки Spring Boot
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ci_cd
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      # JVM настройки
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://135.106.162.132:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
 
 volumes:
   ci_cd_pg_data:

@@ -15,6 +15,40 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
+      - name: Copy docker-compose.yml to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          # Проверяем наличие файла
+          if [ ! -f "docker-compose.yml" ]; then
+            echo "❌ Ошибка: docker-compose.yml не найден!"
+            echo "📂 Содержимое текущей директории:"
+            ls -la
+            exit 1
+          fi
+
+          # Создаем директорию на VPS
+          sshpass -p "$VPS_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            "$VPS_USER@$VPS_HOST" "mkdir -p /opt/my-service"
+
+          # Копируем файл
+          echo "📁 Копируем docker-compose.yml на VPS..."
+          sshpass -p "$VPS_PASSWORD" scp \
+            -o StrictHostKeyChecking=no \
+            docker-compose.yml \
+            "$VPS_USER@$VPS_HOST:/opt/my-service/"
+
+          # Проверяем, что файл скопировался
+          echo "✅ Проверка: файл скопирован"
+          sshpass -p "$VPS_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            "$VPS_USER@$VPS_HOST" "ls -la /opt/my-service/docker-compose.yml"
+             
+          
+
       - name: Deploy to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}

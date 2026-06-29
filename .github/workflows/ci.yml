@@ -29,6 +29,5 @@ jobs:
               docker compose up -d
             '
 
-
       - name: Verify HTTP endpoint
         run: http://135.106.162.132/

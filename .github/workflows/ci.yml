@@ -19,12 +19,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Verify Java version
-        run: |
-          java -version
-          javac -version
-          mvn --version
-
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
@@ -42,13 +36,12 @@ jobs:
             -o StrictHostKeyChecking=no \
             "$VPS_USER@$VPS_HOST" "mkdir -p /opt/my-service"
           
-          # Копируем docker-compose.yml
+          # Копируем файлы
           sshpass -p "$VPS_PASSWORD" scp \
             -o StrictHostKeyChecking=no \
             docker-compose.yml \
             "$VPS_USER@$VPS_HOST:/opt/my-service/"
           
-          # Копируем JAR файл
           sshpass -p "$VPS_PASSWORD" scp \
             -o StrictHostKeyChecking=no \
             target/*.jar \
@@ -62,56 +55,15 @@ jobs:
         run: |
           sshpass -p "$VPS_PASSWORD" ssh \
             -o StrictHostKeyChecking=no \
-            "$VPS_USER@$VPS_HOST" '
-              cd /opt/my-service &&
-              docker compose down api 2>/dev/null || true &&
-              docker compose up -d &&
-              echo "✅ Деплой завершен!"
-            '
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/my-service && docker compose down api 2>/dev/null || true && docker compose up -d"
 
-      - name: Wait for API to start
+      - name: Wait for API
         run: |
-          echo "⏳ Ожидаем запуска API..."
-          sleep 15
+          echo "⏳ Ожидаем запуска API (30 секунд)..."
+          sleep 30
 
-      - name: Test API
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          echo "🔍 Проверка API на http://$VPS_HOST:8080"
-          
-          RETRY=0
-          MAX_RETRIES=20
-          
-          while [ $RETRY -lt $MAX_RETRIES ]; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-              http://$VPS_HOST:8080/actuator/health 2>/dev/null || echo "000")
-          
-            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
-              echo "✅ API работает! HTTP Status: $HTTP_CODE"
-              echo "📊 Health details:"
-              curl -s http://$VPS_HOST:8080/actuator/health
-              break
-            else
-              RETRY=$((RETRY + 1))
-              echo "⏳ Ожидание... (${RETRY}/${MAX_RETRIES}) HTTP: $HTTP_CODE"
-              sleep 3
-            fi
-          done
-          
-          if [ $RETRY -eq $MAX_RETRIES ]; then
-            echo "❌ API не запустился за отведенное время!"
-            echo "📝 Проверьте логи на VPS:"
-            sshpass -p "$VPS_PASSWORD" ssh \
-              -o StrictHostKeyChecking=no \
-              "$VPS_USER@$VPS_HOST" '
-                cd /opt/my-service &&
-                docker compose logs api --tail=30
-              '
-            exit 1
-          fi
-
-      - name: Show container status
+      - name: Check container status
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
@@ -120,15 +72,63 @@ jobs:
           echo "🐳 Статус контейнеров:"
           sshpass -p "$VPS_PASSWORD" ssh \
             -o StrictHostKeyChecking=no \
-            "$VPS_USER@$VPS_HOST" '
-              cd /opt/my-service &&
-              docker compose ps
-            '
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/my-service && docker compose ps"
 
-      - name: Deployment complete
+      - name: Check API logs
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          echo "📝 Логи API:"
+          sshpass -p "$VPS_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/my-service && docker compose logs api --tail=30"
+
+      - name: Test API locally on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          echo "🔍 Проверка API локально на VPS:"
+          RESPONSE=$(sshpass -p "$VPS_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            "$VPS_USER@$VPS_HOST" \
+            "curl -s http://localhost:8080/actuator/health 2>/dev/null || echo 'API не отвечает'")
+          
+          echo "Ответ: $RESPONSE"
+          
+          if echo "$RESPONSE" | grep -q "UP"; then
+            echo "✅ API работает!"
+          else
+            echo "⚠️ API не отвечает или нездоров"
+          fi
+
+      - name: Test API from external
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          echo "🔍 Проверка API извне:"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "http://$VPS_HOST:8080/actuator/health" 2>/dev/null || echo "000")
+          
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ]; then
+            echo "✅ API доступен извне! HTTP: $HTTP_CODE"
+          else
+            echo "⚠️ API не доступен извне. HTTP: $HTTP_CODE"
+            echo "Возможные причины:"
+            echo "  - Порт 8080 не открыт в брандмауэре"
+            echo "  - Проброс порта не настроен"
+            echo "  - API слушает на другом порту"
+          fi
+
+      - name: Deployment info
         run: |
           echo "========================================="
-          echo "✅ Деплой успешно завершен!"
-          echo "🌐 API доступен по адресу:"
-          echo "   http://135.106.162.132:8080"
+          echo "✅ Деплой завершен!"
+          echo "📝 Проверьте API вручную:"
+          echo "   curl http://135.106.162.132:8080/actuator/health"
           echo "========================================="

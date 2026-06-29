@@ -9,7 +9,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/igorloskk/ci_cd_practice
+  IMAGE_NAME: ghcr.io/igorlosk/ci_cd_practice
 
 jobs:
   build-and-test:

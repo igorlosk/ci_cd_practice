@@ -15,23 +15,59 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
+      - name: Copy docker-compose.yml to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          if [ ! -f "docker-compose.yml" ]; then
+            echo "❌ docker-compose.yml не найден!"
+            exit 1
+          fi
+          
+          sshpass -p "$VPS_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            "$VPS_USER@$VPS_HOST" "mkdir -p /opt/my-service"
+          
+          echo "📁 Копируем docker-compose.yml..."
+          sshpass -p "$VPS_PASSWORD" scp \
+            -o StrictHostKeyChecking=no \
+            docker-compose.yml \
+            "$VPS_USER@$VPS_HOST:/opt/my-service/"
+
       - name: Deploy to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
+          echo "🚀 Запускаем деплой..."
           sshpass -p "$VPS_PASSWORD" ssh \
             -o StrictHostKeyChecking=no \
             "$VPS_USER@$VPS_HOST" '
               cd /opt/my-service &&
               docker compose pull &&
-              docker compose up -d
+              docker compose up -d --remove-orphans &&
+              echo "✅ Деплой завершен!"
             '
 
-      - name: Verify deployment
+      - name: Check container status
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
-          echo "⏳ Ожидаем запуска сервиса..."
-          sleep 10
-          echo "🔍 Проверяем доступность сервиса..."
-          curl --fail --retry 10 --retry-delay 5 http://135.106.162.132/ || true
+          echo "🐳 Проверяем статус контейнеров..."
+          sshpass -p "$VPS_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no \
+            "$VPS_USER@$VPS_HOST" '
+              cd /opt/my-service &&
+              docker compose ps
+            '
+
+      - name: Deployment complete
+        run: |
+          echo "========================================="
+          echo "✅ Деплой успешно завершен!"
+          echo "========================================="

@@ -35,6 +35,4 @@ public class PhoneController {
         Phone phone = dbPhoneService.getById(id);
         return ResponseEntity.ok(phoneToDtoMapper.toDto(phone));
     }
-
-
 }

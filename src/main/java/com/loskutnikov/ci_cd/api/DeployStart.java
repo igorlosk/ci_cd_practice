@@ -1,15 +1,13 @@
 package com.loskutnikov.ci_cd.api;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController()
-@RequestMapping("/deploy")
 public class DeployStart {
 
-    @GetMapping
+    @GetMapping("/")
     public String deploy() {
-        return "deploy-success";
+        return "Деплой успешно завершен!";
     }
 }

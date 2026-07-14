@@ -6,6 +6,8 @@ import com.loskutnikov.ci_cd.domain.PhoneToDtoMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/phone")
 public class PhoneController {
@@ -34,5 +36,34 @@ public class PhoneController {
     ) {
         Phone phone = dbPhoneService.getById(id);
         return ResponseEntity.ok(phoneToDtoMapper.toDto(phone));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PhoneDto>> getAll() {
+        return ResponseEntity.ok(
+                dbPhoneService.getAllPhones()
+                        .stream()
+                        .map(phoneToDtoMapper::toDto)
+                        .toList());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PhoneDto> update(
+            @PathVariable Long id,
+            @RequestBody PhoneDto dto
+    ) {
+        return ResponseEntity.ok(
+                phoneToDtoMapper.toDto(
+                        dbPhoneService.updateById(dto, id)
+                )
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id
+    ) {
+        dbPhoneService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -52,16 +52,28 @@ public class DbPhoneService implements PhoneService {
 
     @Override
     public void deleteById(Long id) {
-
+        PhoneEntity phoneEntity = phoneRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Phone with id=" + id + " not found"));
+        phoneRepository.delete(phoneEntity);
     }
 
     @Override
     public Phone updateById(PhoneDto phoneDto, Long id) {
-        return null;
+        PhoneEntity phoneEntity = phoneRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Phone with id=" + id + " not found"));
+        phoneEntity.setBrandName(phoneDto.brandName());
+        phoneEntity.setModel(phoneDto.model());
+        phoneEntity.setPrice(phoneDto.price());
+        phoneRepository.save(phoneEntity);
+        return phoneToEntityMapper.toDomain(phoneEntity);
     }
 
     @Override
     public List<Phone> getAllPhones() {
-        return List.of();
+
+        return phoneRepository.findAll()
+                .stream()
+                .map(phoneToEntityMapper::toDomain)
+                .toList();
     }
 }

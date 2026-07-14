@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Phone API</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Телефоны</h1>
+
+<div class="card">
+    <h2>Добавить телефон</h2>
+
+    <input id="brand" placeholder="Бренд">
+    <input id="model" placeholder="Модель">
+    <input id="price" type="number" placeholder="Цена">
+
+    <button onclick="createPhone()">Создать</button>
+</div>
+
+<div class="card">
+    <h2>Получить телефон</h2>
+
+    <input id="phoneId" placeholder="ID">
+
+    <button onclick="getPhone()">Получить</button>
+
+    <pre id="result"></pre>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

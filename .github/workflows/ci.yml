@@ -3,13 +3,12 @@ name: ci
 on:
   push:
     branches: [main]
-  workflow_dispatch: # Ручной запуск
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    # Добавляем ограничение по времени
     timeout-minutes: 15
 
     steps:
@@ -82,10 +81,11 @@ jobs:
             "$VPS_USER@$VPS_HOST" "
               cd /opt/my-service &&
               echo '📦 Остановка старых контейнеров...' &&
-              docker compose down api 2>/dev/null || true &&
+              docker compose down || true &&
               echo '🔄 Пересборка...' &&
-              docker compose up -d &&
+              docker compose up -d --build &&
               echo '✅ Контейнеры запущены'
+              docker compose ps
             "
 
       - name: Wait for services to start
